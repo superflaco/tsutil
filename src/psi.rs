@@ -287,7 +287,7 @@ pub fn calc_crc32(section_data: &[u8]) -> u32 {
             }
             byte_pos = byte_pos + 1;
         }
-        println!("crc for {} was {}", hex::encode_upper(to_sum), crc32);
+        //println!("crc for {} was {}", hex::encode_upper(to_sum), crc32);
         return crc32;
     }
     return 0;

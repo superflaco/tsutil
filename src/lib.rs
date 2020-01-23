@@ -140,7 +140,7 @@ mod tests {
     #[test]
     fn synth_pmt() {
         let raw_pkt = create_pmt_packet(0x1000, &[(256, 27)], 9);
-        println!("raw {}", hex::encode_upper(&raw_pkt[..]));
+        //println!("raw {}", hex::encode_upper(&raw_pkt[..]));
         let pmt_pkt = Packet::new(raw_pkt);
         assert_eq!(pmt_pkt.sync(), 0x47);
         assert_eq!(pmt_pkt.pid(), 0x1000);
@@ -159,7 +159,7 @@ mod tests {
         assert_eq!(pmt.pcr_pid(), 0x1FFF);
         assert_eq!(pmt.descriptor_data(), None);
         let es = pmt.elementary_streams();
-        println!("streams {}", hex::encode_upper(es));
+        //println!("streams {}", hex::encode_upper(es));
 
         assert_eq!(es.valid_stream(), true);
         assert_eq!(es.stream_type(), 27);
