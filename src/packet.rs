@@ -32,8 +32,8 @@ impl Packet {
     ) -> PacketData {
         let mut data = Packet::create_packet(tei, pusi, priority, pid, tsc, afc, cc);
         let mut payload_len = payload.len();
-        if payload_len > 180 {
-            payload_len = 180;
+        if payload_len > 184 {
+            payload_len = 184;
         }
         for pos in 0..payload_len {
             data[4 + pos] = payload[pos];

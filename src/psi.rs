@@ -10,7 +10,7 @@ impl PSI for Packet {
         if self.has_payload() {
             let data = self.payload_data();
             let padding = data[0] as usize;
-            println!("table padding {}", padding + 1);
+            //println!("table padding {}", padding + 1);
             return Some(&data[padding + 1..]);
         }
         return None;
@@ -164,7 +164,7 @@ pub fn create_pmt_packet(pid: u16, pid_type_pairs: &[(u16, u8)], cc: u8) -> Pack
     let stream_count = pid_type_pairs.len();
     // pointer byte comes 5 bytes into the 188 byte packet and pmt had 16 bytes plus 5 bytes for each elementary stream with no descriptors
     let pointer = 188 - 5 - 16 - (5 * stream_count);
-    println!("table pointer {}", pointer);
+    //println!("table pointer {}", pointer);
     pmt[4] = pointer as u8;
     let offset = pointer + 5 /* 5 bytes before pointer field */ ;
 
