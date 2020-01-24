@@ -20,6 +20,27 @@ impl Packet {
         return updated;
     }
 
+    pub fn create_packet_with_payload(
+        tei: bool,
+        pusi: bool,
+        priority: bool,
+        pid: u16,
+        tsc: u8,
+        afc: u8,
+        cc: u8,
+        payload: &[u8],
+    ) -> PacketData {
+        let mut data = Packet::create_packet(tei, pusi, priority, pid, tsc, afc, cc);
+        let mut payload_len = payload.len();
+        if payload_len > 180 {
+            payload_len = 180;
+        }
+        for pos in 0..payload_len {
+            data[4 + pos] = payload[pos];
+        }
+        return data;
+    }
+
     pub fn create_packet(
         tei: bool,
         pusi: bool,
