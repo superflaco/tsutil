@@ -30,13 +30,32 @@ impl Packet {
         cc: u8,
         payload: &[u8],
     ) -> PacketData {
-        let mut data = Packet::create_packet(tei, pusi, priority, pid, tsc, afc, cc);
+        const FULL_PAYLOAD_LEN: usize = 184;
         let mut payload_len = payload.len();
-        if payload_len > 184 {
-            payload_len = 184;
+        let mut offset = 4;
+        let mut data: PacketData;
+        if payload_len > FULL_PAYLOAD_LEN {
+            // yep! silently dropping any extra payload passed in
+            // TODO: return two packets with the payload split across
+            payload_len = FULL_PAYLOAD_LEN;
+        } 
+
+        if payload_len == FULL_PAYLOAD_LEN {
+            data = Packet::create_packet(tei, pusi, priority, pid, tsc, afc, cc);
+        } else {
+            if payload_len > FULL_PAYLOAD_LEN - 2 {
+                // again dropping data if we can't stick it in after adding the adaptation field
+                // TODO: return two packets with the payload split across
+                payload_len = FULL_PAYLOAD_LEN - 2;
+            }
+            data = Packet::create_packet(tei, pusi, priority, pid, tsc, afc | 0x2, cc);
+            let aflen = FULL_PAYLOAD_LEN - 1 - payload_len;
+            data[4] = aflen as u8;
+            data[5] = 0; // no additional adaptation field flags set
+            offset = 4 + 1 + aflen;
         }
         for pos in 0..payload_len {
-            data[4 + pos] = payload[pos];
+            data[offset + pos] = payload[pos];
         }
         return data;
     }

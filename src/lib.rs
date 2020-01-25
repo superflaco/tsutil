@@ -4,7 +4,7 @@ pub mod psi;
 #[cfg(test)]
 mod tests {
 
-    use crate::packet::{Packet, PacketHeader};
+    use crate::packet::{AdaptationField, Packet, PacketHeader, Payload};
     use crate::psi::{
         calc_crc32, create_pat_packet, create_pmt_packet, ElementaryStream, TableHeader,
         TableSyntaxSection, PAT, PMT, PSI,
@@ -71,6 +71,16 @@ mod tests {
         let payload_pkt = Packet::new(hex_to_bin(payload_data_hex));
         assert_eq!(payload_pkt.sync(), 0x47);
         assert_eq!(payload_pkt.pid(), 0x100);
+        assert_eq!(payload_pkt.has_adaptation_field(), true);
+        assert_eq!(payload_pkt.has_payload(), true);
+        let payload_data = payload_pkt.payload_data();
+        assert_eq!(payload_pkt.has_pcr(), true);
+        println!(
+            "aflen: {}, payload len: {}, data {}",
+            payload_pkt.aflen(),
+            payload_data.len(),
+            hex::encode_upper(payload_data)
+        );
     }
 
     #[test]
@@ -88,6 +98,46 @@ mod tests {
         assert_eq!(synth_pkt.cc(), 9);
         let updated_pkt = Packet::new(Packet::with_cc(raw_pkt, 3));
         assert_eq!(updated_pkt.cc(), 3);
+    }
+
+    #[test]
+    fn synth_packet_with_large_payload() {
+        let large_payload: [u8;184] = [0xBB; 184];
+        let raw_pkt = Packet::create_packet_with_payload(false, true, false, 0, 0, 1, 9, &large_payload);
+        println!("raw {}", hex::encode_upper(&raw_pkt[..]));
+        let synth_pkt = Packet::new(raw_pkt);
+        assert_eq!(synth_pkt.sync(), 0x47);
+        assert_eq!(synth_pkt.tei(), false);
+        assert_eq!(synth_pkt.pusi(), true);
+        assert_eq!(synth_pkt.priority(), false);
+        assert_eq!(synth_pkt.pid(), 0);
+        assert_eq!(synth_pkt.tsc(), 0);
+        assert_eq!(synth_pkt.afc(), 1);
+        assert_eq!(synth_pkt.cc(), 9);
+        assert_eq!(synth_pkt.has_adaptation_field(), false);
+        let updated_pkt = Packet::new(Packet::with_cc(raw_pkt, 3));
+        assert_eq!(updated_pkt.cc(), 3);
+    }
+    #[test]
+    fn synth_packet_with_small_payload() {
+        let small_payload: [u8; 8] = [0xDE, 0xAD, 0xBE, 0xEF, 0xCA, 0xFE, 0xBA, 0xBE];
+        let raw_pkt = Packet::create_packet_with_payload(false, true, false, 0, 0, 1, 9, &small_payload); 
+        let synth_pkt = Packet::new(raw_pkt);
+        println!("raw {}", hex::encode_upper(&raw_pkt[..]));
+        assert_eq!(synth_pkt.sync(), 0x47);
+        assert_eq!(synth_pkt.tei(), false);
+        assert_eq!(synth_pkt.pusi(), true);
+        assert_eq!(synth_pkt.priority(), false);
+        assert_eq!(synth_pkt.pid(), 0);
+        assert_eq!(synth_pkt.tsc(), 0);
+        assert_eq!(synth_pkt.afc(), 3);
+        assert_eq!(synth_pkt.cc(), 9);
+        assert_eq!(synth_pkt.has_adaptation_field(), true);
+        assert_eq!(synth_pkt.aflen(), 175);
+        let updated_pkt = Packet::new(Packet::with_cc(raw_pkt, 3));
+        assert_eq!(updated_pkt.cc(), 3);
+        assert_eq!(updated_pkt.has_adaptation_field(), true);
+        assert_eq!(updated_pkt.aflen(), 175);
     }
 
     #[test]
